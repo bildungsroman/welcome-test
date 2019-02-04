@@ -17,8 +17,6 @@ Resources:
       Tracing: Active
       Policies:
         - AWSXrayWriteOnlyAccess
-        - DynamoDBCrudPolicy:
-            TableName: !Ref table73E4770B
       Events:
         apiFE76C470:
           Type: Api
@@ -26,10 +24,6 @@ Resources:
             Path: /
             Method: GET
             RestApiId: !Ref apiFE76C470
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref table73E4770B
-          TABLE_ARN: !GetAtt table73E4770B.Arn
     Metadata:
       StackeryName: getWelcomePage
   apiFE76C470:
@@ -37,7 +31,7 @@ Resources:
     Properties:
       Name: !Sub
         - ${ResourceName} From Stackery Stack ${StackeryStackTagName} Environment ${StackeryEnvironmentTagName}
-        - ResourceName: apiFE76C470
+        - ResourceName: restApi
       StageName: !Ref StackeryEnvironmentAPIGatewayStageName
       DefinitionBody:
         swagger: '2.0'
@@ -52,299 +46,13 @@ Resources:
               responses: {}
           /users:
             post:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${functionA43B4F16.Arn}/invocations
               responses: {}
           /users/{id}:
             put:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${functionA43B4F16.Arn}/invocations
               responses: {}
       EndpointConfiguration: REGIONAL
-  functionA43B4F16:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub ${AWS::StackName}-functionA43B4F16
-      Description: !Sub
-        - Stackery Stack ${StackeryStackTagName} Environment ${StackeryEnvironmentTagName} Function ${ResourceName}
-        - ResourceName: createOrUpdateUser
-      CodeUri: src/functionA43B4F16
-      Handler: index.handler
-      Runtime: nodejs8.10
-      MemorySize: 3008
-      Timeout: 30
-      Tracing: Active
-      Policies:
-        - AWSXrayWriteOnlyAccess
-        - DynamoDBCrudPolicy:
-            TableName: !Ref table73E4770B
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:/${StackeryEnvironmentTagName}/*
-        - AWSLambdaENIManagementAccess
-      Events:
-        apiFE76C470PUTusersid:
-          Type: Api
-          Properties:
-            Path: /users/{id}
-            Method: PUT
-            RestApiId: !Ref apiFE76C470
-        apiFE76C470POSTusers:
-          Type: Api
-          Properties:
-            Path: /users
-            Method: POST
-            RestApiId: !Ref apiFE76C470
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref table73E4770B
-          TABLE_ARN: !GetAtt table73E4770B.Arn
-          SECRETS_NAMESPACE: !Sub /${StackeryEnvironmentTagName}/
-      VpcConfig:
-        SecurityGroupIds:
-          - !GetAtt virtualNetwork51A261CE.DefaultSecurityGroup
-        SubnetIds:
-          - !Ref virtualNetwork51A261CEPrivateSubnet1
-          - !Ref virtualNetwork51A261CEPrivateSubnet2
     Metadata:
-      StackeryName: createOrUpdateUser
-  table73E4770B:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
-      StreamSpecification:
-        StreamViewType: NEW_AND_OLD_IMAGES
-      TableName: !Sub ${AWS::StackName}-table73E4770B
-  virtualNetwork51A261CE:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: 10.0.0.0/16
-      Tags:
-        - Key: Name
-          Value: !Sub
-            - Stackery Stack ${StackeryStackTagName} Environment ${StackeryEnvironmentTagName} Virtual Network ${ResourceName}
-            - ResourceName: virtualNetwork51A261CE
-  virtualNetwork51A261CEPrivateSubnet1:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone: !Select
-        - 0
-        - !GetAZs ''
-      CidrBlock: !Select
-        - 0
-        - !Cidr
-          - 10.0.0.0/16
-          - 4
-          - 14
-      Tags:
-        - Key: Name
-          Value: !Sub
-            - Stackery Stack ${StackeryStackTagName} Environment ${StackeryEnvironmentTagName} Virtual Network ${ResourceName} Private Subnet 1
-            - ResourceName: virtualNetwork51A261CE
-      VpcId: !Ref virtualNetwork51A261CE
-  virtualNetwork51A261CEPrivateSubnet2:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone: !Select
-        - 1
-        - !GetAZs ''
-      CidrBlock: !Select
-        - 1
-        - !Cidr
-          - 10.0.0.0/16
-          - 4
-          - 14
-      Tags:
-        - Key: Name
-          Value: !Sub
-            - Stackery Stack ${StackeryStackTagName} Environment ${StackeryEnvironmentTagName} Virtual Network ${ResourceName} Private Subnet 2
-            - ResourceName: virtualNetwork51A261CE
-      VpcId: !Ref virtualNetwork51A261CE
-  virtualNetwork51A261CEPublicSubnet1:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone: !Select
-        - 0
-        - !GetAZs ''
-      CidrBlock: !Select
-        - 2
-        - !Cidr
-          - 10.0.0.0/16
-          - 4
-          - 14
-      MapPublicIpOnLaunch: true
-      Tags:
-        - Key: Name
-          Value: !Sub
-            - Stackery Stack ${StackeryStackTagName} Environment ${StackeryEnvironmentTagName} Virtual Network ${ResourceName} Public Subnet 1
-            - ResourceName: virtualNetwork51A261CE
-      VpcId: !Ref virtualNetwork51A261CE
-  virtualNetwork51A261CEPublicSubnet2:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone: !Select
-        - 1
-        - !GetAZs ''
-      CidrBlock: !Select
-        - 3
-        - !Cidr
-          - 10.0.0.0/16
-          - 4
-          - 14
-      MapPublicIpOnLaunch: true
-      Tags:
-        - Key: Name
-          Value: !Sub
-            - Stackery Stack ${StackeryStackTagName} Environment ${StackeryEnvironmentTagName} Virtual Network ${ResourceName} Public Subnet 2
-            - ResourceName: virtualNetwork51A261CE
-      VpcId: !Ref virtualNetwork51A261CE
-  virtualNetwork51A261CEPrivateSubnet1NatGatewayEIP:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
-  virtualNetwork51A261CEPrivateSubnet1NatGateway:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt virtualNetwork51A261CEPrivateSubnet1NatGatewayEIP.AllocationId
-      SubnetId: !Ref virtualNetwork51A261CEPublicSubnet1
-  virtualNetwork51A261CEPrivateSubnet1RouteTable:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::RouteTable
-    Properties:
-      Tags:
-        - Key: Name
-          Value: !Sub
-            - Stackery Stack ${StackeryStackTagName} Environment ${StackeryEnvironmentTagName} Virtual Network ${ResourceName} Private Subnet 1 Route Table
-            - ResourceName: virtualNetwork51A261CE
-      VpcId: !Ref virtualNetwork51A261CE
-  virtualNetwork51A261CEPrivateSubnet1NatGatewayRoute:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::Route
-    Properties:
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref virtualNetwork51A261CEPrivateSubnet1NatGateway
-      RouteTableId: !Ref virtualNetwork51A261CEPrivateSubnet1RouteTable
-  virtualNetwork51A261CEPrivateSubnet1RouteTableAssociation:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref virtualNetwork51A261CEPrivateSubnet1RouteTable
-      SubnetId: !Ref virtualNetwork51A261CEPrivateSubnet1
-  virtualNetwork51A261CEPrivateSubnet2NatGatewayEIP:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
-  virtualNetwork51A261CEPrivateSubnet2NatGateway:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt virtualNetwork51A261CEPrivateSubnet2NatGatewayEIP.AllocationId
-      SubnetId: !Ref virtualNetwork51A261CEPublicSubnet2
-  virtualNetwork51A261CEPrivateSubnet2RouteTable:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::RouteTable
-    Properties:
-      Tags:
-        - Key: Name
-          Value: !Sub
-            - Stackery Stack ${StackeryStackTagName} Environment ${StackeryEnvironmentTagName} Virtual Network ${ResourceName} Private Subnet 2 Route Table
-            - ResourceName: virtualNetwork51A261CE
-      VpcId: !Ref virtualNetwork51A261CE
-  virtualNetwork51A261CEPrivateSubnet2NatGatewayRoute:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::Route
-    Properties:
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref virtualNetwork51A261CEPrivateSubnet2NatGateway
-      RouteTableId: !Ref virtualNetwork51A261CEPrivateSubnet2RouteTable
-  virtualNetwork51A261CEPrivateSubnet2RouteTableAssociation:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref virtualNetwork51A261CEPrivateSubnet2RouteTable
-      SubnetId: !Ref virtualNetwork51A261CEPrivateSubnet2
-  virtualNetwork51A261CEPublicSubnetsInternetGateway:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::InternetGateway
-    Properties:
-      Tags:
-        - Key: Name
-          Value: !Sub
-            - Stackery Stack ${StackeryStackTagName} Environment ${StackeryEnvironmentTagName} Virtual Network ${ResourceName} Public Subnets Internet Gateway
-            - ResourceName: virtualNetwork51A261CE
-  virtualNetwork51A261CEPublicSubnetsInternetGatewayAttachment:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::VPCGatewayAttachment
-    Properties:
-      InternetGatewayId: !Ref virtualNetwork51A261CEPublicSubnetsInternetGateway
-      VpcId: !Ref virtualNetwork51A261CE
-  virtualNetwork51A261CEPublicSubnetsRouteTable:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::RouteTable
-    Properties:
-      Tags:
-        - Key: Name
-          Value: !Sub
-            - Stackery Stack ${StackeryStackTagName} Environment ${StackeryEnvironmentTagName} Virtual Network ${ResourceName} Public Subnets Route Table
-            - ResourceName: virtualNetwork51A261CE
-      VpcId: !Ref virtualNetwork51A261CE
-  virtualNetwork51A261CEPublicSubnetsInternetGatewayRoute:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::Route
-    Properties:
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref virtualNetwork51A261CEPublicSubnetsInternetGateway
-      RouteTableId: !Ref virtualNetwork51A261CEPublicSubnetsRouteTable
-  virtualNetwork51A261CEPublicSubnet1RouteTableAssociation:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref virtualNetwork51A261CEPublicSubnetsRouteTable
-      SubnetId: !Ref virtualNetwork51A261CEPublicSubnet1
-  virtualNetwork51A261CEPublicSubnet2RouteTableAssociation:
-    Metadata:
-      StackeryManaged: true
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref virtualNetwork51A261CEPublicSubnetsRouteTable
-      SubnetId: !Ref virtualNetwork51A261CEPublicSubnet2
+      StackeryName: restApi
 Parameters:
   StackeryStackTagName:
     Type: String
